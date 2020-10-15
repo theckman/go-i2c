@@ -1,3 +1,3 @@
-module github.com/theckman/go-i2c
+module github.com/theckman/i2c
 
 go 1.15
