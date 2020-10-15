@@ -16,11 +16,15 @@ import (
 	"syscall"
 )
 
+// NOOPDebugf is a no-op formatted debug function.
+func NOOPDebugf(string, ...interface{}) {}
+
 // I2C represents a connection to I2C-device.
 type I2C struct {
-	addr uint8
-	bus  int
-	rc   *os.File
+	addr   uint8
+	bus    int
+	rc     *os.File
+	debugf func(string, ...interface{})
 }
 
 // NewI2C opens a connection for I2C-device.
@@ -33,11 +37,25 @@ func NewI2C(addr uint8, bus int) (*I2C, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if err := ioctl(f.Fd(), I2C_SLAVE, uintptr(addr)); err != nil {
 		return nil, err
 	}
-	v := &I2C{rc: f, bus: bus, addr: addr}
-	return v, nil
+
+	i := &I2C{
+		rc:     f,
+		bus:    bus,
+		addr:   addr,
+		debugf: NOOPDebug,
+	}
+
+	return i, nil
+}
+
+// SetDebugf sets a formatted debug function, which can be used to hook in to
+// your logging system.
+func (v *I2C) SetDebugf(debugf func(format string, args ...interface{})) {
+	c.debugf = debugf
 }
 
 // GetBus return bus line, where I2C-device is allocated.
@@ -57,7 +75,7 @@ func (v *I2C) write(buf []byte) (int, error) {
 // WriteBytes send bytes to the remote I2C-device. The interpretation of
 // the message is implementation-dependent.
 func (v *I2C) WriteBytes(buf []byte) (int, error) {
-	lg.Debugf("Write %d hex bytes: [%+v]", len(buf), hex.EncodeToString(buf))
+	v.debugf("Write %d hex bytes: [%+v]", len(buf), hex.EncodeToString(buf))
 	return v.write(buf)
 }
 
@@ -72,7 +90,7 @@ func (v *I2C) ReadBytes(buf []byte) (int, error) {
 	if err != nil {
 		return n, err
 	}
-	lg.Debugf("Read %d hex bytes: [%+v]", len(buf), hex.EncodeToString(buf))
+	v.debugf("Read %d hex bytes: [%+v]", len(buf), hex.EncodeToString(buf))
 	return n, nil
 }
 
@@ -85,7 +103,7 @@ func (v *I2C) Close() error {
 // starting from reg address.
 // SMBus (System Management Bus) protocol over I2C.
 func (v *I2C) ReadRegBytes(reg byte, n int) ([]byte, int, error) {
-	lg.Debugf("Read %d bytes starting from reg 0x%0X...", n, reg)
+	v.debugf("Read %d bytes starting from reg 0x%0X...", n, reg)
 	_, err := v.WriteBytes([]byte{reg})
 	if err != nil {
 		return nil, 0, err
@@ -96,7 +114,6 @@ func (v *I2C) ReadRegBytes(reg byte, n int) ([]byte, int, error) {
 		return nil, 0, err
 	}
 	return buf, c, nil
-
 }
 
 // ReadRegU8 reads byte from I2C-device register specified in reg.
@@ -111,7 +128,7 @@ func (v *I2C) ReadRegU8(reg byte) (byte, error) {
 	if err != nil {
 		return 0, err
 	}
-	lg.Debugf("Read U8 %d from reg 0x%0X", buf[0], reg)
+	v.debugf("Read U8 %d from reg 0x%0X", buf[0], reg)
 	return buf[0], nil
 }
 
@@ -123,7 +140,7 @@ func (v *I2C) WriteRegU8(reg byte, value byte) error {
 	if err != nil {
 		return err
 	}
-	lg.Debugf("Write U8 %d to reg 0x%0X", value, reg)
+	v.debugf("Write U8 %d to reg 0x%0X", value, reg)
 	return nil
 }
 
@@ -141,7 +158,7 @@ func (v *I2C) ReadRegU16BE(reg byte) (uint16, error) {
 		return 0, err
 	}
 	w := uint16(buf[0])<<8 + uint16(buf[1])
-	lg.Debugf("Read U16 %d from reg 0x%0X", w, reg)
+	v.debugf("Read U16 %d from reg 0x%0X", w, reg)
 	return w, nil
 }
 
@@ -172,7 +189,7 @@ func (v *I2C) ReadRegS16BE(reg byte) (int16, error) {
 		return 0, err
 	}
 	w := int16(buf[0])<<8 + int16(buf[1])
-	lg.Debugf("Read S16 %d from reg 0x%0X", w, reg)
+	v.debugf("Read S16 %d from reg 0x%0X", w, reg)
 	return w, nil
 }
 
@@ -187,7 +204,6 @@ func (v *I2C) ReadRegS16LE(reg byte) (int16, error) {
 	// exchange bytes
 	w = (w&0xFF)<<8 + w>>8
 	return w, nil
-
 }
 
 // WriteRegU16BE writes unsigned big endian word (16 bits)
@@ -199,7 +215,7 @@ func (v *I2C) WriteRegU16BE(reg byte, value uint16) error {
 	if err != nil {
 		return err
 	}
-	lg.Debugf("Write U16 %d to reg 0x%0X", value, reg)
+	v.debugf("Write U16 %d to reg 0x%0X", value, reg)
 	return nil
 }
 
@@ -220,7 +236,7 @@ func (v *I2C) WriteRegS16BE(reg byte, value int16) error {
 	if err != nil {
 		return err
 	}
-	lg.Debugf("Write S16 %d to reg 0x%0X", value, reg)
+	v.debugf("Write S16 %d to reg 0x%0X", value, reg)
 	return nil
 }
 

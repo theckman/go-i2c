@@ -1,7 +1,7 @@
 language: go
 go:
-  - "1.10"
-# - "tip"
+  - "1.15.x"
+  - "1.14.x"
 
 # first part of the GOARCH workaround
 # setting the GOARCH directly doesn't work, since the value will be overwritten later
