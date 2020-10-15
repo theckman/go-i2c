@@ -15,28 +15,11 @@ i2c is licensed under MIT License.
 Pre-fork this project was tested on Raspberry Pi 1 (Model B), Raspberry Pi 3
 (Model B+), Banana Pi (model M1), Orange Pi Zero, Orange Pi One.
 
-## Golang usage
+## Usage
 
-```go
-func main() {
-  // Create new connection to I2C bus on 2 line with address 0x27
-  i2c, err := i2c.NewI2C(0x27, 2)
-  if err != nil { log.Fatal(err) }
-  // Free I2C connection on exit
-  defer i2c.Close()
-  ....
-  // Here goes code specific for sending and reading data
-  // to and from device connected via I2C bus, like:
-  _, err := i2c.Write([]byte{0x1, 0xF3})
-  if err != nil { log.Fatal(err) }
-  ....
-}
-```
-
-
-## Getting help
-
-[GoDoc documentation](http://godoc.org/github.com/theckman/i2c) can be found here.
+This section is a work in progress. Ideally the
+[GoDoc](http://godoc.org/github.com/theckman/i2c) page provides enough context
+to get started.
 
 ## Troubleshooting
 
