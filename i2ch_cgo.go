@@ -8,5 +8,5 @@ import "C"
 // Get I2C_SLAVE constant value from
 // Linux OS I2C declaration file.
 const (
-	I2C_SLAVE = C.I2C_SLAVE
+	i2cSlave = C.I2C_SLAVE
 )

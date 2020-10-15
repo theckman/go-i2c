@@ -38,7 +38,7 @@ func NewI2C(addr uint8, bus int) (*I2C, error) {
 		return nil, err
 	}
 
-	if err := ioctl(f.Fd(), I2C_SLAVE, uintptr(addr)); err != nil {
+	if err := ioctl(f.Fd(), i2cSlave, uintptr(addr)); err != nil {
 		return nil, err
 	}
 
