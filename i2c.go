@@ -46,7 +46,7 @@ func NewI2C(addr uint8, bus int) (*I2C, error) {
 		rc:     f,
 		bus:    bus,
 		addr:   addr,
-		debugf: NOOPDebug,
+		debugf: NOOPDebugf,
 	}
 
 	return i, nil
@@ -55,7 +55,7 @@ func NewI2C(addr uint8, bus int) (*I2C, error) {
 // SetDebugf sets a formatted debug function, which can be used to hook in to
 // your logging system.
 func (v *I2C) SetDebugf(debugf func(format string, args ...interface{})) {
-	c.debugf = debugf
+	v.debugf = debugf
 }
 
 // GetBus return bus line, where I2C-device is allocated.
