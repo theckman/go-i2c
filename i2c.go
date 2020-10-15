@@ -71,12 +71,14 @@ func (i *I2C) GetAddr() uint8 {
 // Write satisfies io.Writer, sending data to the I2C-device.
 func (i *I2C) Write(buf []byte) (int, error) {
 	i.debugf("Write %d hex bytes: [%+v]", len(buf), hex.EncodeToString(buf))
+
 	return i.rc.Write(buf)
 }
 
 // WriteByte writes a single byte to the I2C device.
 func (i *I2C) WriteByte(b byte) (int, error) {
 	buf := [1]byte{b}
+
 	return i.Write(buf[:])
 }
 
@@ -101,15 +103,19 @@ func (i *I2C) Close() error {
 // SMBus (System Management Bus) protocol over I2C.
 func (i *I2C) ReadRegBytes(reg byte, n int) ([]byte, int, error) {
 	i.debugf("Read %d bytes starting from reg 0x%0X...", n, reg)
+
 	_, err := i.WriteByte(reg)
 	if err != nil {
 		return nil, 0, err
 	}
+
 	buf := make([]byte, n)
+
 	c, err := i.Read(buf)
 	if err != nil {
 		return nil, 0, err
 	}
+
 	return buf, c, nil
 }
 
@@ -120,11 +126,14 @@ func (i *I2C) ReadRegU8(reg byte) (byte, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	buf := make([]byte, 1)
+
 	_, err = i.Read(buf)
 	if err != nil {
 		return 0, err
 	}
+
 	i.debugf("Read U8 %d from reg 0x%0X", buf[0], reg)
 	return buf[0], nil
 }
@@ -133,10 +142,12 @@ func (i *I2C) ReadRegU8(reg byte) (byte, error) {
 // SMBus (System Management Bus) protocol over I2C.
 func (i *I2C) WriteRegU8(reg byte, value byte) error {
 	buf := []byte{reg, value}
+
 	_, err := i.Write(buf)
 	if err != nil {
 		return err
 	}
+
 	i.debugf("Write U8 %d to reg 0x%0X", value, reg)
 	return nil
 }
@@ -149,12 +160,16 @@ func (i *I2C) ReadRegU16BE(reg byte) (uint16, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	buf := make([]byte, 2)
+
 	_, err = i.Read(buf)
 	if err != nil {
 		return 0, err
 	}
+
 	w := uint16(buf[0])<<8 + uint16(buf[1])
+
 	i.debugf("Read U16 %d from reg 0x%0X", w, reg)
 	return w, nil
 }
@@ -167,8 +182,10 @@ func (i *I2C) ReadRegU16LE(reg byte) (uint16, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	// exchange bytes
 	w = (w&0xFF)<<8 + w>>8
+
 	return w, nil
 }
 
@@ -180,12 +197,16 @@ func (i *I2C) ReadRegS16BE(reg byte) (int16, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	buf := make([]byte, 2)
+
 	_, err = i.Read(buf)
 	if err != nil {
 		return 0, err
 	}
+
 	w := int16(buf[0])<<8 + int16(buf[1])
+
 	i.debugf("Read S16 %d from reg 0x%0X", w, reg)
 	return w, nil
 }
@@ -198,8 +219,10 @@ func (i *I2C) ReadRegS16LE(reg byte) (int16, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	// exchange bytes
 	w = (w&0xFF)<<8 + w>>8
+
 	return w, nil
 }
 
@@ -208,10 +231,12 @@ func (i *I2C) ReadRegS16LE(reg byte) (int16, error) {
 // SMBus (System Management Bus) protocol over I2C.
 func (i *I2C) WriteRegU16BE(reg byte, value uint16) error {
 	buf := []byte{reg, byte((value & 0xFF00) >> 8), byte(value & 0xFF)}
+
 	_, err := i.Write(buf)
 	if err != nil {
 		return err
 	}
+
 	i.debugf("Write U16 %d to reg 0x%0X", value, reg)
 	return nil
 }
@@ -221,6 +246,7 @@ func (i *I2C) WriteRegU16BE(reg byte, value uint16) error {
 // SMBus (System Management Bus) protocol over I2C.
 func (i *I2C) WriteRegU16LE(reg byte, value uint16) error {
 	w := (value*0xFF00)>>8 + value<<8
+
 	return i.WriteRegU16BE(reg, w)
 }
 
@@ -229,10 +255,12 @@ func (i *I2C) WriteRegU16LE(reg byte, value uint16) error {
 // SMBus (System Management Bus) protocol over I2C.
 func (i *I2C) WriteRegS16BE(reg byte, value int16) error {
 	buf := []byte{reg, byte((uint16(value) & 0xFF00) >> 8), byte(value & 0xFF)}
+
 	_, err := i.Write(buf)
 	if err != nil {
 		return err
 	}
+
 	i.debugf("Write S16 %d to reg 0x%0X", value, reg)
 	return nil
 }
@@ -242,6 +270,7 @@ func (i *I2C) WriteRegS16BE(reg byte, value int16) error {
 // SMBus (System Management Bus) protocol over I2C.
 func (i *I2C) WriteRegS16LE(reg byte, value int16) error {
 	w := int16((uint16(value)*0xFF00)>>8) + value<<8
+
 	return i.WriteRegS16BE(reg, w)
 }
 
@@ -250,5 +279,6 @@ func ioctl(fd, cmd, arg uintptr) error {
 	if err != 0 {
 		return err
 	}
+
 	return nil
 }
