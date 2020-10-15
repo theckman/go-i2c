@@ -17,7 +17,7 @@ import (
 )
 
 // NOOPDebugf is a no-op formatted debug function. Exported so that you can use
-// it to toggle debug logging back off using I2C.SetDebugf().
+// it to toggle debug logging back off using Device.SetDebugf().
 func NOOPDebugf(string, ...interface{}) {}
 
 // Device is a connection to a device on the I²C bus. It contains a file handle
@@ -71,8 +71,8 @@ func (d *Device) Addr() uint8 {
 }
 
 // Write satisfies io.Writer, sending data to the I2C device.
-func (d *Device) Write(buf []byte) (int, error) {
-	n := len(buf)
+func (d *Device) Write(p []byte) (int, error) {
+	n := len(p)
 	if n > 512 {
 		return 0, fmt.Errorf("maximum message length 512, was %d", n)
 	}
@@ -81,9 +81,9 @@ func (d *Device) Write(buf []byte) (int, error) {
 		return 0, errors.New("minimum message length 1")
 	}
 
-	d.debugf("Write %d bytes: [%+v]", len(buf), hex.EncodeToString(buf))
+	d.debugf("Write %d bytes: [%+v]", n, hex.EncodeToString(p))
 
-	return d.rc.Write(buf)
+	return d.rc.Write(p)
 }
 
 // WriteByte writes a single byte to the I2C device.
@@ -115,13 +115,13 @@ func (d *Device) WriteReg(p []byte, reg byte) (int, error) {
 }
 
 // Read satisfies io.Reader, reading data from the I2C device.
-func (d *Device) Read(buf []byte) (int, error) {
-	n, err := d.rc.Read(buf)
+func (d *Device) Read(p []byte) (int, error) {
+	n, err := d.rc.Read(p)
 	if err != nil {
 		return n, err
 	}
 
-	d.debugf("Read %d bytes: [%+v]", len(buf), hex.EncodeToString(buf))
+	d.debugf("Read %d bytes: [%+v]", n, hex.EncodeToString(p[:n]))
 	return n, nil
 }
 
