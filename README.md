@@ -6,6 +6,10 @@
 
 This project is a set of Go bindings for the I²C bus, focused on sensors compatible with Raspberry Pi (and RPi clones). This project was forked from [github.com/d2r2/go-i2c](https://github.com/d2r2/go-i2c), which itself was forked from [github.com/davecheney/i2c](https://github.com/davecheney/i2c).
 
+## License
+
+i2c is licensed under MIT License.
+
 ## Compatibility
 
 Pre-fork this project was tested on Raspberry Pi 1 (Model B), Raspberry Pi 3
@@ -57,7 +61,3 @@ to discover address occupied by peripheral device. To install utility you should
 	60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 	70: -- -- -- -- -- -- 76 --    
 	```
-
-## License
-
-i2c is licensed under MIT License.
