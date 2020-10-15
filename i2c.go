@@ -6,7 +6,6 @@
 //
 // Each i2c bus can address 127 independent i2c devices, and most
 // Linux systems contain several buses.
-
 package i2c
 
 import (
@@ -16,7 +15,8 @@ import (
 	"syscall"
 )
 
-// NOOPDebugf is a no-op formatted debug function.
+// NOOPDebugf is a no-op formatted debug function. Exported so that you can use
+// it to toggle debug logging back off using I2C.SetDebugf().
 func NOOPDebugf(string, ...interface{}) {}
 
 // I2C represents a connection to I2C-device.
@@ -68,28 +68,19 @@ func (v *I2C) GetAddr() uint8 {
 	return v.addr
 }
 
-func (v *I2C) write(buf []byte) (int, error) {
+// Write satisfies io.Writer, sending data to the I2C-device.
+func (v *I2C) Write(buf []byte) (int, error) {
+	v.debugf("Write %d hex bytes: [%+v]", len(buf), hex.EncodeToString(buf))
 	return v.rc.Write(buf)
 }
 
-// WriteBytes send bytes to the remote I2C-device. The interpretation of
-// the message is implementation-dependent.
-func (v *I2C) WriteBytes(buf []byte) (int, error) {
-	v.debugf("Write %d hex bytes: [%+v]", len(buf), hex.EncodeToString(buf))
-	return v.write(buf)
-}
-
-func (v *I2C) read(buf []byte) (int, error) {
-	return v.rc.Read(buf)
-}
-
-// ReadBytes read bytes from I2C-device.
-// Number of bytes read correspond to buf parameter length.
-func (v *I2C) ReadBytes(buf []byte) (int, error) {
-	n, err := v.read(buf)
+// Read satisfies io.Reader, reading data from the I2C-device.
+func (v *I2C) Read(buf []byte) (int, error) {
+	n, err := v.rc.Read(buf)
 	if err != nil {
 		return n, err
 	}
+
 	v.debugf("Read %d hex bytes: [%+v]", len(buf), hex.EncodeToString(buf))
 	return n, nil
 }
@@ -104,12 +95,12 @@ func (v *I2C) Close() error {
 // SMBus (System Management Bus) protocol over I2C.
 func (v *I2C) ReadRegBytes(reg byte, n int) ([]byte, int, error) {
 	v.debugf("Read %d bytes starting from reg 0x%0X...", n, reg)
-	_, err := v.WriteBytes([]byte{reg})
+	_, err := v.Write([]byte{reg})
 	if err != nil {
 		return nil, 0, err
 	}
 	buf := make([]byte, n)
-	c, err := v.ReadBytes(buf)
+	c, err := v.Read(buf)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -119,12 +110,12 @@ func (v *I2C) ReadRegBytes(reg byte, n int) ([]byte, int, error) {
 // ReadRegU8 reads byte from I2C-device register specified in reg.
 // SMBus (System Management Bus) protocol over I2C.
 func (v *I2C) ReadRegU8(reg byte) (byte, error) {
-	_, err := v.WriteBytes([]byte{reg})
+	_, err := v.Write([]byte{reg})
 	if err != nil {
 		return 0, err
 	}
 	buf := make([]byte, 1)
-	_, err = v.ReadBytes(buf)
+	_, err = v.Read(buf)
 	if err != nil {
 		return 0, err
 	}
@@ -136,7 +127,7 @@ func (v *I2C) ReadRegU8(reg byte) (byte, error) {
 // SMBus (System Management Bus) protocol over I2C.
 func (v *I2C) WriteRegU8(reg byte, value byte) error {
 	buf := []byte{reg, value}
-	_, err := v.WriteBytes(buf)
+	_, err := v.Write(buf)
 	if err != nil {
 		return err
 	}
@@ -148,12 +139,12 @@ func (v *I2C) WriteRegU8(reg byte, value byte) error {
 // from I2C-device starting from address specified in reg.
 // SMBus (System Management Bus) protocol over I2C.
 func (v *I2C) ReadRegU16BE(reg byte) (uint16, error) {
-	_, err := v.WriteBytes([]byte{reg})
+	_, err := v.Write([]byte{reg})
 	if err != nil {
 		return 0, err
 	}
 	buf := make([]byte, 2)
-	_, err = v.ReadBytes(buf)
+	_, err = v.Read(buf)
 	if err != nil {
 		return 0, err
 	}
@@ -179,12 +170,12 @@ func (v *I2C) ReadRegU16LE(reg byte) (uint16, error) {
 // from I2C-device starting from address specified in reg.
 // SMBus (System Management Bus) protocol over I2C.
 func (v *I2C) ReadRegS16BE(reg byte) (int16, error) {
-	_, err := v.WriteBytes([]byte{reg})
+	_, err := v.Write([]byte{reg})
 	if err != nil {
 		return 0, err
 	}
 	buf := make([]byte, 2)
-	_, err = v.ReadBytes(buf)
+	_, err = v.Read(buf)
 	if err != nil {
 		return 0, err
 	}
@@ -211,7 +202,7 @@ func (v *I2C) ReadRegS16LE(reg byte) (int16, error) {
 // SMBus (System Management Bus) protocol over I2C.
 func (v *I2C) WriteRegU16BE(reg byte, value uint16) error {
 	buf := []byte{reg, byte((value & 0xFF00) >> 8), byte(value & 0xFF)}
-	_, err := v.WriteBytes(buf)
+	_, err := v.Write(buf)
 	if err != nil {
 		return err
 	}
@@ -232,7 +223,7 @@ func (v *I2C) WriteRegU16LE(reg byte, value uint16) error {
 // SMBus (System Management Bus) protocol over I2C.
 func (v *I2C) WriteRegS16BE(reg byte, value int16) error {
 	buf := []byte{reg, byte((uint16(value) & 0xFF00) >> 8), byte(value & 0xFF)}
-	_, err := v.WriteBytes(buf)
+	_, err := v.Write(buf)
 	if err != nil {
 		return err
 	}
